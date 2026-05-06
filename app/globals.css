@@ -1,26 +1,90 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Light: warm parchment */
+  --bg: #fbf6e9;
+  --bg-elev: #fffaf0;
+  --fg: #1a1410;
+  --fg-muted: #6b5d4f;
+  --accent: #8a5a2b; /* deep gold/sienna */
+  --accent-soft: #d9b779;
+  --rule: #e7dcc1;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0b0b10;
+    --bg-elev: #1a1a23;
+    --fg: #f4ecd8;
+    --fg-muted: #c8bd9f;
+    --accent: #f0c976;
+    --accent-soft: #6b4f23;
+    --rule: #353544;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-rule: var(--rule);
+
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-hebrew: var(--font-hebrew);
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hebrew text class — properly sized for vocalized text. */
+.he {
+  font-family: var(--font-hebrew), "SBL Hebrew", "Times New Roman", serif;
+  direction: rtl;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  line-height: 1.7;
+}
+
+.he-display {
+  font-family: var(--font-hebrew), "SBL Hebrew", "Times New Roman", serif;
+  direction: rtl;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* Subtle parchment texture */
+.parchment {
+  background-image:
+    radial-gradient(
+      circle at 20% 10%,
+      color-mix(in oklab, var(--accent-soft) 10%, transparent) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 90%,
+      color-mix(in oklab, var(--accent) 6%, transparent) 0%,
+      transparent 50%
+    );
+}
+
+/* Decorative rule */
+.fancy-rule {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--rule) 20%,
+    var(--rule) 80%,
+    transparent
+  );
 }

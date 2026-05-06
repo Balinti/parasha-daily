@@ -1,0 +1,19 @@
+{
+  "name": "Parasha Daily",
+  "short_name": "Parasha",
+  "description": "5 minutes of Torah a day — today's parasha verse with Rashi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf6e9",
+  "theme_color": "#8a5a2b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "books", "lifestyle"]
+}
