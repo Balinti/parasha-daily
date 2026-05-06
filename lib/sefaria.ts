@@ -57,14 +57,14 @@ type CalendarsResponse = {
   calendar_items: CalendarItem[];
 };
 
-const FETCH_INIT: RequestInit = {
-  // Cache parasha data on the server for ~6 hours; the parasha changes weekly.
-  next: { revalidate: 60 * 60 * 6 },
-  headers: { Accept: "application/json" },
-};
-
+/**
+ * Browser-safe fetch helper. Uses standard cache: 'force-cache' so repeat
+ * calls in the same session are served from the HTTP cache.
+ */
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, FETCH_INIT);
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+  });
   if (!res.ok) {
     throw new Error(`Sefaria ${res.status}: ${url}`);
   }
