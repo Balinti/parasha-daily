@@ -19,6 +19,8 @@ export type ParashaInfo = {
   ref: string;
   /** English short description */
   description?: string;
+  /** Hebrew short description */
+  descriptionHe?: string;
   /** Aliyot refs, ordered (1..7), if available */
   aliyot?: string[];
 };
@@ -97,6 +99,7 @@ export async function getTodaysParasha(): Promise<ParashaInfo> {
     nameHe: item.displayValue.he,
     ref: item.ref,
     description: item.description?.en,
+    descriptionHe: item.description?.he,
     aliyot: item.extraDetails?.aliyot,
   };
 }

@@ -22,13 +22,13 @@ const hebrew = Frank_Ruhl_Libre({
 });
 
 export const metadata: Metadata = {
-  title: "Parasha Daily — 5 minutes of Torah a day",
+  title: "פרשת השבוע היומית — חמש דקות תורה ביום",
   description:
-    "A daily verse from this week's Parasha, with classic Rashi commentary in Hebrew and English. Build a learning streak, one pasuk at a time.",
+    "פסוק יומי מפרשת השבוע, עם פירוש רש״י בעברית ובאנגלית. בנו רצף לימוד יומי, פסוק אחר פסוק.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Parasha Daily",
+    title: "פרשת היום",
     statusBarStyle: "black-translucent",
   },
 };
@@ -50,7 +50,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="he"
+      dir="rtl"
       className={`${sans.variable} ${display.variable} ${hebrew.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-fg">

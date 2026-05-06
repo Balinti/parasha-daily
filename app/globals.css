@@ -41,9 +41,13 @@ html,
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  /* Hebrew-first: use the Hebrew serif as default body font.
+     Fall back to system fonts for any Latin/punctuation runs. */
+  font-family: var(--font-hebrew), "SBL Hebrew", var(--font-sans), system-ui,
+    -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
 }
 
 /* Hebrew text class — properly sized for vocalized text. */

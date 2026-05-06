@@ -1,12 +1,14 @@
 {
-  "name": "Parasha Daily",
-  "short_name": "Parasha",
-  "description": "5 minutes of Torah a day — today's parasha verse with Rashi.",
+  "name": "פרשת השבוע היומית",
+  "short_name": "פרשת היום",
+  "description": "חמש דקות תורה ביום — פסוק יומי מפרשת השבוע עם פירוש רש״י.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fbf6e9",
   "theme_color": "#8a5a2b",
   "orientation": "portrait",
+  "lang": "he",
+  "dir": "rtl",
   "icons": [
     {
       "src": "/icon.svg",

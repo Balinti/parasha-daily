@@ -100,10 +100,29 @@ export default function StreakBadge() {
     );
   }
 
+  // Hebrew pluralization helpers
+  const daysLabel =
+    state.streak === 0
+      ? "0 ימים"
+      : state.streak === 1
+        ? "יום אחד"
+        : state.streak === 2
+          ? "יומיים"
+          : `${state.streak} ימים`;
+
+  const versesLabel =
+    state.total === 0
+      ? "טרם נלמדו פסוקים"
+      : state.total === 1
+        ? "פסוק אחד נלמד"
+        : state.total === 2
+          ? "שני פסוקים נלמדו"
+          : `${state.total} פסוקים נלמדו`;
+
   return (
     <div className="flex flex-col items-stretch gap-3">
       <div className="flex items-center justify-between gap-3 text-sm">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span
             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium"
             style={{
@@ -112,13 +131,9 @@ export default function StreakBadge() {
             }}
           >
             <FlameIcon />
-            <span>
-              {state.streak} day{state.streak === 1 ? "" : "s"}
-            </span>
+            <span>{daysLabel}</span>
           </span>
-          <span className="text-fg-muted">
-            {state.total} verse{state.total === 1 ? "" : "s"} learned
-          </span>
+          <span className="text-fg-muted">{versesLabel}</span>
         </div>
       </div>
 
@@ -136,7 +151,7 @@ export default function StreakBadge() {
             : "0 1px 0 0 color-mix(in oklab, var(--accent) 60%, black) inset, 0 8px 24px -12px var(--accent)",
         }}
       >
-        {learnedToday ? "✓ Learned today — see you tomorrow" : "I learned this"}
+        {learnedToday ? "✓ למדת היום — נתראה מחר" : "סיימתי ללמוד"}
       </button>
     </div>
   );

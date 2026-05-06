@@ -11,7 +11,7 @@ type Props = {
 type Lang = "en" | "he" | "both";
 
 export default function CommentaryCard({ title, he, en }: Props) {
-  const [lang, setLang] = useState<Lang>("both");
+  const [lang, setLang] = useState<Lang>("he");
   const [expanded, setExpanded] = useState(false);
 
   const hasHe = he.trim().length > 0;
@@ -20,11 +20,11 @@ export default function CommentaryCard({ title, he, en }: Props) {
   if (!hasHe && !hasEn) {
     return (
       <div className="rounded-2xl border border-rule/50 bg-bg-elev p-5">
-        <h3 className="font-semibold text-fg-muted text-sm uppercase tracking-wide">
+        <h3 className="font-semibold text-fg-muted text-sm tracking-wide">
           {title}
         </h3>
-        <p className="mt-2 text-fg-muted text-sm italic">
-          No commentary available on this verse.
+        <p className="mt-2 text-fg-muted text-sm">
+          אין פירוש זמין לפסוק זה.
         </p>
       </div>
     );
@@ -42,20 +42,25 @@ export default function CommentaryCard({ title, he, en }: Props) {
   return (
     <div className="rounded-2xl border border-rule/60 bg-bg-elev p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-        <h3 className="font-semibold text-fg text-sm uppercase tracking-wide">
+        <h3
+          className="font-semibold text-fg text-base tracking-wide"
+          lang="he"
+          dir="rtl"
+          style={{ color: "var(--accent)" }}
+        >
           {title}
         </h3>
         <div className="flex items-center gap-1.5 text-xs">
           {hasHe && hasEn && (
             <>
               <LangButton active={lang === "both"} onClick={() => setLang("both")}>
-                Both
-              </LangButton>
-              <LangButton active={lang === "en"} onClick={() => setLang("en")}>
-                EN
+                שניהם
               </LangButton>
               <LangButton active={lang === "he"} onClick={() => setLang("he")}>
-                עב
+                עברית
+              </LangButton>
+              <LangButton active={lang === "en"} onClick={() => setLang("en")}>
+                אנגלית
               </LangButton>
             </>
           )}
@@ -63,12 +68,22 @@ export default function CommentaryCard({ title, he, en }: Props) {
       </div>
 
       {showHe && (
-        <p className="he text-[1.05rem] leading-loose text-fg mb-3">
+        <p
+          className="he text-[1.05rem] leading-loose text-fg mb-3"
+          lang="he"
+          dir="rtl"
+        >
           {heText}
         </p>
       )}
       {showEn && (
-        <p className="text-fg leading-relaxed text-[0.98rem]">{enText}</p>
+        <p
+          className="text-fg-muted leading-relaxed text-[0.95rem]"
+          lang="en"
+          dir="ltr"
+        >
+          {enText}
+        </p>
       )}
 
       {canExpand && (
@@ -76,7 +91,7 @@ export default function CommentaryCard({ title, he, en }: Props) {
           onClick={() => setExpanded((v) => !v)}
           className="mt-3 text-sm font-medium text-accent hover:underline"
         >
-          {expanded ? "Show less" : "Read full commentary"}
+          {expanded ? "הצג פחות" : "קרא את הפירוש המלא"}
         </button>
       )}
     </div>
