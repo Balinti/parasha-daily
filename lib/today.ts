@@ -9,13 +9,18 @@ import {
 
 export type TodayPayload = {
   parasha: ParashaInfo;
-  /** 1-7, where Sunday=1, Saturday=7 (computed in Asia/Jerusalem) */
+  /**
+   * 1-6 for a learning day (Sun=1..Fri=6).
+   * 7 is Shabbat — no daily lesson; see `isShabbat`.
+   */
   dayOfParasha: number;
+  /** True on Shabbat (Asia/Jerusalem) — verse/rashi will be empty. */
+  isShabbat: boolean;
   /** The aliya ref the verse came from, e.g. "Leviticus 25:1-13" */
   aliyaRef?: string;
-  /** Today's chosen verse */
+  /** Today's chosen verse (empty on Shabbat) */
   verse: VerseRef;
-  /** Rashi commentary on today's verse */
+  /** Rashi commentary on today's verse (empty on Shabbat) */
   rashi: Commentary;
   /** YYYY-MM-DD in Asia/Jerusalem — the lesson key this payload represents */
   forDate: string;
@@ -70,6 +75,19 @@ export function dayOfParashaFromDate(d: Date = new Date()): number {
 }
 
 /**
+ * The "previous lesson day" key, skipping Shabbat.
+ * Sunday's previous lesson is Friday; everything else is just yesterday.
+ */
+export function previousLessonDateKey(now: Date = new Date()): string {
+  const { dayOfWeek } = israelTimeParts(now);
+  // Sunday in Israel time -> step back two calendar days (skipping Shabbat).
+  // (Saturday isn't a lesson day, so we don't define it for that case.)
+  const back = dayOfWeek === 0 ? 2 : 1;
+  const earlier = new Date(now.getTime() - back * 24 * 60 * 60 * 1000);
+  return israelTimeParts(earlier).dateKey;
+}
+
+/**
  * Number of milliseconds until the next midnight in Asia/Jerusalem.
  * Used to schedule an auto-refresh when the day rolls over.
  */
@@ -118,10 +136,26 @@ export async function getTodayPayload(now = new Date()): Promise<TodayPayload> {
   const parasha = await getTodaysParasha();
   const { dateKey, dayOfWeek } = israelTimeParts(now);
   const day = dayOfWeek + 1; // Sun=1..Sat=7
+  const isShabbat = dayOfWeek === 6;
 
-  // Pick aliya for today; fall back to whole-parasha ref if aliyot missing.
+  // Shabbat: skip the verse-of-the-day fetch entirely. Return the parasha
+  // shell so the UI can render a "Shabbat shalom" rest screen.
+  if (isShabbat) {
+    return {
+      parasha,
+      dayOfParasha: day,
+      isShabbat: true,
+      verse: { ref: "", he: "", en: "" },
+      rashi: { he: "", en: "" },
+      forDate: dateKey,
+    };
+  }
+
+  // Sun-Fri: pick aliya for today (Sun=1st aliya..Fri=6th aliya).
+  // Aliyot from Sefaria are typically 7 (or 8 with maftir). We map days 1..6
+  // directly to indices 0..5.
   let aliyaRef: string | undefined;
-  if (parasha.aliyot && parasha.aliyot.length >= 7) {
+  if (parasha.aliyot && parasha.aliyot.length >= 6) {
     aliyaRef = parasha.aliyot[day - 1];
   } else if (parasha.aliyot && parasha.aliyot.length > 0) {
     aliyaRef = parasha.aliyot[Math.min(day - 1, parasha.aliyot.length - 1)];
@@ -137,6 +171,7 @@ export async function getTodayPayload(now = new Date()): Promise<TodayPayload> {
   return {
     parasha,
     dayOfParasha: day,
+    isShabbat: false,
     aliyaRef,
     verse,
     rashi,

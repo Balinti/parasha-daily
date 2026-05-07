@@ -10,6 +10,7 @@ import {
 } from "@/lib/today";
 import StreakBadge from "@/components/StreakBadge";
 import CommentaryCard from "@/components/CommentaryCard";
+import ShabbatScreen from "@/components/ShabbatScreen";
 
 const HEBREW_DAYS = [
   "יום ראשון",
@@ -18,7 +19,6 @@ const HEBREW_DAYS = [
   "יום רביעי",
   "יום חמישי",
   "יום שישי",
-  "שבת קודש",
 ];
 
 const HEBREW_DAY_POSSESSIVES = [
@@ -28,11 +28,10 @@ const HEBREW_DAY_POSSESSIVES = [
   "פסוק ליום רביעי",
   "פסוק ליום חמישי",
   "פסוק ליום שישי",
-  "פסוק לשבת",
 ];
 
 function hebrewNumeral(n: number): string {
-  const letters = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז"];
+  const letters = ["", "א", "ב", "ג", "ד", "ה", "ו"];
   return letters[n] ?? String(n);
 }
 
@@ -193,10 +192,7 @@ export default function TodayLoader() {
     );
   }
 
-  const { parasha, dayOfParasha, verse, rashi } = payload;
-  const dayLabelHe = HEBREW_DAYS[dayOfParasha - 1] ?? `יום ${dayOfParasha}`;
-  const dayPossessiveHe =
-    HEBREW_DAY_POSSESSIVES[dayOfParasha - 1] ?? "פסוק היום";
+  const { parasha, dayOfParasha, verse, rashi, isShabbat } = payload;
 
   const today = new Date();
   const dateLabel = new Intl.DateTimeFormat("he-IL", {
@@ -205,6 +201,15 @@ export default function TodayLoader() {
     day: "numeric",
     month: "long",
   }).format(today);
+
+  // Saturday — render the Shabbat shalom screen, no verse-of-the-day.
+  if (isShabbat) {
+    return <ShabbatScreen parasha={parasha} dateLabel={dateLabel} />;
+  }
+
+  const dayLabelHe = HEBREW_DAYS[dayOfParasha - 1] ?? `יום ${dayOfParasha}`;
+  const dayPossessiveHe =
+    HEBREW_DAY_POSSESSIVES[dayOfParasha - 1] ?? "פסוק היום";
 
   const description = parasha.descriptionHe || parasha.description;
 
@@ -216,7 +221,7 @@ export default function TodayLoader() {
             {dateLabel}
           </p>
           <p className="text-fg-muted text-xs whitespace-nowrap">
-            יום {hebrewNumeral(dayOfParasha)} מתוך ז׳
+            יום {hebrewNumeral(dayOfParasha)} מתוך ו׳
           </p>
         </div>
 

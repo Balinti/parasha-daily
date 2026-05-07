@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { israelTimeParts } from "@/lib/today";
+import { israelTimeParts, previousLessonDateKey } from "@/lib/today";
 
 type StreakState = {
   /** Last date the user marked "learned" (YYYY-MM-DD, Asia/Jerusalem) */
   lastDate: string | null;
-  /** Consecutive days streak */
+  /** Consecutive lesson-days streak (Shabbat doesn't break it) */
   streak: number;
   /** Total verses learned, all time */
   total: number;
@@ -18,11 +18,11 @@ function todayKey(d = new Date()): string {
   return israelTimeParts(d).dateKey;
 }
 
-function yesterdayKey(d = new Date()): string {
-  // Subtract 24 hours and re-evaluate in Israel time.
-  const earlier = new Date(d.getTime() - 24 * 60 * 60 * 1000);
-  return israelTimeParts(earlier).dateKey;
+/** Previous *lesson* day key — skips Shabbat (Sunday's previous is Friday). */
+function previousLessonKey(d = new Date()): string {
+  return previousLessonDateKey(d);
 }
+
 
 function loadState(): StreakState {
   if (typeof window === "undefined") {
@@ -79,12 +79,12 @@ export default function StreakBadge() {
   const learnedToday = state.lastDate === today;
 
   const onMarkLearned = () => {
-    const yesterday = yesterdayKey();
-    let nextStreak: number;
     if (state.lastDate === today) {
       return; // already done today
     }
-    if (state.lastDate === yesterday) {
+    const previous = previousLessonKey();
+    let nextStreak: number;
+    if (state.lastDate === previous) {
       nextStreak = state.streak + 1;
     } else if (state.lastDate === null) {
       nextStreak = 1;
