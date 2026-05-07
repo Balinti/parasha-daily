@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getTodayPayload, type TodayPayload } from "@/lib/today";
+import { useEffect, useRef, useState } from "react";
+import {
+  getTodayPayload,
+  israelTimeParts,
+  msUntilNextIsraelMidnight,
+  APP_TIMEZONE,
+  type TodayPayload,
+} from "@/lib/today";
 import StreakBadge from "@/components/StreakBadge";
 import CommentaryCard from "@/components/CommentaryCard";
 
@@ -43,9 +49,9 @@ function readCache(): TodayPayload | null {
     const raw = window.localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedPayload;
-    // Cache is valid only for the same forDate (today, in user's local TZ).
-    const today = new Date().toISOString().slice(0, 10);
-    if (parsed.payload?.forDate !== today) return null;
+    // Cache is valid only for the same forDate (today in Asia/Jerusalem).
+    const todayKey = israelTimeParts().dateKey;
+    if (parsed.payload?.forDate !== todayKey) return null;
     return parsed.payload;
   } catch {
     return null;
@@ -64,13 +70,21 @@ function writeCache(payload: TodayPayload) {
 export default function TodayLoader() {
   const [payload, setPayload] = useState<TodayPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Increment to force a re-fetch (e.g. when the Israel-time day rolls over).
+  const [reloadKey, setReloadKey] = useState(0);
+  const lastDateKey = useRef<string>(israelTimeParts().dateKey);
 
+  // Fetch (and re-fetch) the payload whenever reloadKey changes.
   useEffect(() => {
     let cancelled = false;
     const cached = readCache();
     if (cached) {
       setPayload(cached);
+    } else {
+      setPayload(null);
     }
+    setError(null);
+
     (async () => {
       try {
         const fresh = await getTodayPayload();
@@ -87,6 +101,48 @@ export default function TodayLoader() {
     })();
     return () => {
       cancelled = true;
+    };
+  }, [reloadKey]);
+
+  // Schedule an auto-refresh exactly at the next Israel midnight, plus a
+  // background poll every minute that catches any clock drift / sleep wake.
+  // Also refresh whenever the tab becomes visible after the day rolled over.
+  useEffect(() => {
+    function checkRollover() {
+      const nowKey = israelTimeParts().dateKey;
+      if (nowKey !== lastDateKey.current) {
+        lastDateKey.current = nowKey;
+        setReloadKey((k) => k + 1);
+      }
+    }
+
+    // Schedule a first refresh ~at midnight Asia/Jerusalem.
+    let midnightTimer: ReturnType<typeof setTimeout> | undefined;
+    function scheduleMidnight() {
+      if (typeof window === "undefined") return;
+      const ms = msUntilNextIsraelMidnight();
+      midnightTimer = setTimeout(() => {
+        checkRollover();
+        scheduleMidnight(); // schedule the day after
+      }, ms);
+    }
+    scheduleMidnight();
+
+    // Belt-and-braces: poll every 60s in case the timer drifted (laptop sleep).
+    const pollTimer = setInterval(checkRollover, 60_000);
+
+    // And refresh when the tab regains focus.
+    function onVisibility() {
+      if (typeof document !== "undefined" && !document.hidden) {
+        checkRollover();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      if (midnightTimer) clearTimeout(midnightTimer);
+      clearInterval(pollTimer);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
@@ -143,11 +199,12 @@ export default function TodayLoader() {
     HEBREW_DAY_POSSESSIVES[dayOfParasha - 1] ?? "פסוק היום";
 
   const today = new Date();
-  const dateLabel = today.toLocaleDateString("he-IL", {
+  const dateLabel = new Intl.DateTimeFormat("he-IL", {
+    timeZone: APP_TIMEZONE,
     weekday: "long",
     day: "numeric",
     month: "long",
-  });
+  }).format(today);
 
   const description = parasha.descriptionHe || parasha.description;
 

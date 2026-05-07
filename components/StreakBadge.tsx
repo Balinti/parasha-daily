@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { israelTimeParts } from "@/lib/today";
 
 type StreakState = {
-  /** Last date the user marked "learned" (YYYY-MM-DD, local) */
+  /** Last date the user marked "learned" (YYYY-MM-DD, Asia/Jerusalem) */
   lastDate: string | null;
   /** Consecutive days streak */
   streak: number;
@@ -14,16 +15,13 @@ type StreakState = {
 const KEY = "parasha-daily.streak.v1";
 
 function todayKey(d = new Date()): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return israelTimeParts(d).dateKey;
 }
 
 function yesterdayKey(d = new Date()): string {
-  const y = new Date(d);
-  y.setDate(y.getDate() - 1);
-  return todayKey(y);
+  // Subtract 24 hours and re-evaluate in Israel time.
+  const earlier = new Date(d.getTime() - 24 * 60 * 60 * 1000);
+  return israelTimeParts(earlier).dateKey;
 }
 
 function loadState(): StreakState {
@@ -59,13 +57,25 @@ export default function StreakBadge() {
     total: 0,
   });
   const [hydrated, setHydrated] = useState(false);
+  // Re-render trigger when the Israel-time day rolls over.
+  const [today, setToday] = useState<string>(() => todayKey());
 
   useEffect(() => {
     setState(loadState());
     setHydrated(true);
+
+    function refreshToday() {
+      const next = todayKey();
+      setToday((prev) => (prev === next ? prev : next));
+    }
+    const poll = setInterval(refreshToday, 60_000);
+    document.addEventListener("visibilitychange", refreshToday);
+    return () => {
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", refreshToday);
+    };
   }, []);
 
-  const today = todayKey();
   const learnedToday = state.lastDate === today;
 
   const onMarkLearned = () => {
