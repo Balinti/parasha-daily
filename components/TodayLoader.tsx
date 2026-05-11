@@ -5,6 +5,7 @@ import {
   getTodayPayload,
   israelTimeParts,
   msUntilNextIsraelMidnight,
+  pickDailySentence,
   APP_TIMEZONE,
   type TodayPayload,
 } from "@/lib/today";
@@ -202,7 +203,10 @@ export default function TodayLoader() {
   const dayPossessiveHe =
     HEBREW_DAY_POSSESSIVES[dayOfParasha - 1] ?? "פסוק היום";
 
-  const description = parasha.descriptionHe || parasha.description;
+  // One rotating sentence from the parasha description per day, so the header
+  // copy changes throughout the week even though the parasha is the same.
+  const fullDescription = parasha.descriptionHe || parasha.description;
+  const description = pickDailySentence(fullDescription, dayOfParasha - 1);
 
   return (
     <div className="mx-auto max-w-2xl px-5 pb-24 pt-8 sm:pt-12">

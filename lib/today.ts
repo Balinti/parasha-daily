@@ -134,6 +134,45 @@ export function firstVerseOfRange(rangeRef: string): string {
 }
 
 /**
+ * Split a Hebrew/English paragraph into sentences. Splits on `.`, `?`, `!`,
+ * and the Hebrew sof pasuk `׃`, keeping the punctuation attached to the
+ * preceding sentence.
+ */
+export function splitSentences(text: string): string[] {
+  if (!text) return [];
+  // Sentence terminator followed by whitespace = boundary.
+  // Avoid splitting on dots inside abbreviations like "ר׳" by also requiring
+  // the next char to be uppercase letter or Hebrew letter or end-of-string.
+  return text
+    .split(/(?<=[.?!׃])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * Pick the sentence to show today, evenly distributing the available
+ * sentences across the 6 learning days. So:
+ *   - 1 sentence  → shown every day (no variation possible)
+ *   - 2 sentences → each shown 3 days
+ *   - 3 sentences → each shown 2 days
+ *   - 6 sentences → one per day
+ *   - >6          → still evenly distributed; some are skipped
+ */
+export function pickDailySentence(
+  description: string | undefined,
+  dayIndex: number,
+): string {
+  if (!description) return "";
+  const sentences = splitSentences(description);
+  if (sentences.length === 0) return description;
+  const days = 6;
+  const idx = Math.max(0, Math.min(dayIndex, days - 1));
+  // floor(i * N / 6) evenly distributes the N sentences over 6 days.
+  const pick = Math.floor((idx * sentences.length) / days);
+  return sentences[Math.min(pick, sentences.length - 1)];
+}
+
+/**
  * Pick a verse for `dayIndex` (0-based, 0..5) from a sorted list of verse refs.
  * Splits the list into 6 contiguous chunks and returns the first verse of the
  * chunk corresponding to today, so each day shows a different verse and the
