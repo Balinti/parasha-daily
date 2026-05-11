@@ -2,6 +2,7 @@ import {
   getTodaysParasha,
   getVerse,
   getCommentary,
+  listVersesWithRashi,
   type ParashaInfo,
   type VerseRef,
   type Commentary,
@@ -132,6 +133,24 @@ export function firstVerseOfRange(rangeRef: string): string {
   return `${head}:1`;
 }
 
+/**
+ * Pick a verse for `dayIndex` (0-based, 0..5) from a sorted list of verse refs.
+ * Splits the list into 6 contiguous chunks and returns the first verse of the
+ * chunk corresponding to today, so each day shows a different verse and the
+ * verses progress through the parasha sequentially.
+ */
+export function pickDailyVerse(
+  rashiVerses: string[],
+  dayIndex: number,
+): string | null {
+  if (rashiVerses.length === 0) return null;
+  const days = 6;
+  const idx = Math.max(0, Math.min(dayIndex, days - 1));
+  // Even distribution: chunk i starts at floor(i * N / 6).
+  const startIdx = Math.floor((idx * rashiVerses.length) / days);
+  return rashiVerses[Math.min(startIdx, rashiVerses.length - 1)];
+}
+
 export async function getTodayPayload(now = new Date()): Promise<TodayPayload> {
   const parasha = await getTodaysParasha();
   const { dateKey, dayOfWeek } = israelTimeParts(now);
@@ -151,17 +170,26 @@ export async function getTodayPayload(now = new Date()): Promise<TodayPayload> {
     };
   }
 
-  // Sun-Fri: pick aliya for today (Sun=1st aliya..Fri=6th aliya).
-  // Aliyot from Sefaria are typically 7 (or 8 with maftir). We map days 1..6
-  // directly to indices 0..5.
-  let aliyaRef: string | undefined;
-  if (parasha.aliyot && parasha.aliyot.length >= 6) {
-    aliyaRef = parasha.aliyot[day - 1];
-  } else if (parasha.aliyot && parasha.aliyot.length > 0) {
-    aliyaRef = parasha.aliyot[Math.min(day - 1, parasha.aliyot.length - 1)];
+  // Find every verse in the parasha that has direct Rashi commentary, then
+  // split those into 6 chunks (one per learning day) and pick today's.
+  // This guarantees:
+  //   1. Every day's verse has a Rashi comment to study
+  //   2. Verses progress sequentially through the parasha
+  //   3. Each day shows a different verse
+  const rashiVerses = await listVersesWithRashi(parasha.ref);
+
+  let verseRef: string;
+  if (rashiVerses.length > 0) {
+    verseRef = pickDailyVerse(rashiVerses, day - 1) ?? firstVerseOfRange(parasha.ref);
+  } else {
+    // Extremely rare fallback: no Rashi anywhere in this parasha. Use the
+    // first verse of today's aliya (if available) just to show something.
+    const aliyaRef =
+      parasha.aliyot && parasha.aliyot.length >= 6
+        ? parasha.aliyot[day - 1]
+        : parasha.ref;
+    verseRef = firstVerseOfRange(aliyaRef);
   }
-  const sourceRef = aliyaRef ?? parasha.ref;
-  const verseRef = firstVerseOfRange(sourceRef);
 
   const [verse, rashi] = await Promise.all([
     getVerse(verseRef),
@@ -172,7 +200,6 @@ export async function getTodayPayload(now = new Date()): Promise<TodayPayload> {
     parasha,
     dayOfParasha: day,
     isShabbat: false,
-    aliyaRef,
     verse,
     rashi,
     forDate: dateKey,

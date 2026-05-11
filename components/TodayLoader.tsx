@@ -12,15 +12,6 @@ import StreakBadge from "@/components/StreakBadge";
 import CommentaryCard from "@/components/CommentaryCard";
 import ShabbatScreen from "@/components/ShabbatScreen";
 
-const HEBREW_DAYS = [
-  "יום ראשון",
-  "יום שני",
-  "יום שלישי",
-  "יום רביעי",
-  "יום חמישי",
-  "יום שישי",
-];
-
 const HEBREW_DAY_POSSESSIVES = [
   "פסוק ליום ראשון",
   "פסוק ליום שני",
@@ -35,7 +26,8 @@ function hebrewNumeral(n: number): string {
   return letters[n] ?? String(n);
 }
 
-const CACHE_KEY = "parasha-daily.payload.v1";
+// v2: Rashi-aware verse selection (parasha-wide chunks instead of first-of-aliya).
+const CACHE_KEY = "parasha-daily.payload.v2";
 
 type CachedPayload = {
   fetchedAt: number;
@@ -207,7 +199,6 @@ export default function TodayLoader() {
     return <ShabbatScreen parasha={parasha} dateLabel={dateLabel} />;
   }
 
-  const dayLabelHe = HEBREW_DAYS[dayOfParasha - 1] ?? `יום ${dayOfParasha}`;
   const dayPossessiveHe =
     HEBREW_DAY_POSSESSIVES[dayOfParasha - 1] ?? "פסוק היום";
 
@@ -246,16 +237,15 @@ export default function TodayLoader() {
       <div className="fancy-rule mb-8" />
 
       <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <p className="text-fg-muted text-xs tracking-widest">
-            {dayPossessiveHe}
-          </p>
-          <p className="he text-sm text-fg-muted mt-0.5" lang="he" dir="rtl">
-            {dayLabelHe}
-          </p>
-        </div>
+        <p
+          className="text-fg-muted text-sm tracking-wide"
+          lang="he"
+          dir="rtl"
+        >
+          {dayPossessiveHe}
+        </p>
         <span
-          className="he text-sm px-2.5 py-1.5 rounded-md border border-rule/60 text-fg-muted self-start"
+          className="he text-sm px-2.5 py-1.5 rounded-md border border-rule/60 text-fg-muted"
           title="מראה מקום"
           lang="he"
           dir="rtl"
