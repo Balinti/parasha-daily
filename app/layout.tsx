@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Frank_Ruhl_Libre, Inter } from "next/font/google";
 import "./globals.css";
+import VisitTracker from "@/components/VisitTracker";
 
 const sans = Inter({
   variable: "--font-sans",
@@ -56,6 +57,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-bg text-fg">
         {children}
+        <VisitTracker />
       </body>
     </html>
   );
